@@ -2,6 +2,7 @@ package com.bitespeed.Services;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -92,6 +93,54 @@ public class ContactServiceImpl implements ContactService {
         return formatResponse(primary, allRelated);
     }
 
+    @Override
+    public List<IdentifyResponseDto> getAllIdentifyCustomer() throws Exception {
+
+        List<Contact> contacts = contactRepository.findAll();
+
+       Map<Long, List<Contact>> groupedByPrimary = contacts.stream()
+        .filter(contact -> contact.getLinkedId() != null)
+        .collect(Collectors.groupingBy(Contact::getLinkedId));
+
+        List<IdentifyResponseDto> responseList = new ArrayList<>();
+
+        for (Map.Entry<Long, List<Contact>> entry : groupedByPrimary.entrySet()) {
+            Long primaryId = entry.getKey();
+            List<Contact> group = entry.getValue();
+
+            Set<String> emails = new HashSet<>();
+            Set<String> phoneNumbers = new HashSet<>();
+            List<Long> secondaryIds = new ArrayList<>();
+
+            for (Contact contact : group) {
+                if (contact.getId().equals(primaryId)) {
+                    // primary contact
+                    emails.add(contact.getEmail());
+                    phoneNumbers.add(contact.getPhoneNumber());
+                } else {
+                    secondaryIds.add(contact.getId());
+                    if (contact.getEmail() != null)
+                        emails.add(contact.getEmail());
+                    if (contact.getPhoneNumber() != null)
+                        phoneNumbers.add(contact.getPhoneNumber());
+                }
+            }
+
+            ContactDto contactDto = new ContactDto(
+                    primaryId,
+                    new ArrayList<>(emails),
+                    new ArrayList<>(phoneNumbers),
+                    secondaryIds);
+
+            IdentifyResponseDto dto = new IdentifyResponseDto(contactDto);
+
+            responseList.add(dto);
+        }
+
+        return responseList;
+
+    }
+
     private Set<Contact> getAllLinkedContacts(Set<Contact> matchContacts) {
         Set<Contact> result = new HashSet<>(matchContacts);
         Queue<Contact> queue = new LinkedList<>(matchContacts);
@@ -117,7 +166,7 @@ public class ContactServiceImpl implements ContactService {
 
         // just for debugging
         // for (Contact c : allRelated) {
-        //     System.out.println(c);
+        // System.out.println(c);
         // }
 
         Set<String> emails = new LinkedHashSet<>();
