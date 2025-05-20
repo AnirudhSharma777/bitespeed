@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import com.bitespeed.Dto.IdentifyRequest;
 import com.bitespeed.Entities.Contact;
 import com.bitespeed.Entities.LinkPrecedence;
-import com.bitespeed.Exceptions.IllegalArgumentException;
+import com.bitespeed.Exceptions.MethodArgumentNotValidException;
 import com.bitespeed.Repositories.ContactRepository;
 import com.bitespeed.ResponseDto.ContactDto;
 import com.bitespeed.ResponseDto.IdentifyResponseDto;
@@ -29,7 +29,7 @@ public class ContactServiceImpl implements ContactService {
         String phoneNumber = request.phoneNumber();
 
         if (email == null && phoneNumber == null) {
-            throw new IllegalArgumentException("Either email or phoneNumber must be provided.");
+            throw new MethodArgumentNotValidException("Either email or phoneNumber must be provided.");
         }
 
         Set<Contact> matchContacts = new HashSet<>(
@@ -98,9 +98,14 @@ public class ContactServiceImpl implements ContactService {
 
         List<Contact> contacts = contactRepository.findAll();
 
-       Map<Long, List<Contact>> groupedByPrimary = contacts.stream()
-        .filter(contact -> contact.getLinkedId() != null)
-        .collect(Collectors.groupingBy(Contact::getLinkedId));
+        // Map<Long, List<Contact>> groupedByPrimary = contacts.stream()
+        //         .filter(contact -> contact.getLinkedId() != null)
+        //         .collect(Collectors.groupingBy(Contact::getLinkedId));
+
+        Map<Long, List<Contact>> groupedByPrimary = contacts.stream()
+                .collect(Collectors
+                        .groupingBy(contact -> contact.getLinkPrecedence() == LinkPrecedence.PRIMARY ? contact.getId()
+                                : contact.getLinkedId()));
 
         List<IdentifyResponseDto> responseList = new ArrayList<>();
 
