@@ -24,12 +24,12 @@ public class ContactController {
     private final ContactServiceImpl contactService;
 
     @PostMapping("/identify")
-    public ResponseEntity<IdentifyResponseDto> identify(@Valid @RequestBody IdentifyRequest request) throws Exception{
+    public ResponseEntity<IdentifyResponseDto> identify(@Valid @RequestBody IdentifyRequest request) throws Exception {
         return ResponseEntity.ok(contactService.identifyCustomer(request));
     }
 
     @GetMapping("/identify")
-    public ResponseEntity<List<IdentifyResponseDto>> getIdentify() throws Exception{
+    public ResponseEntity<List<IdentifyResponseDto>> getIdentify() throws Exception {
         return ResponseEntity.ok(contactService.getAllIdentifyCustomer());
     }
 }
